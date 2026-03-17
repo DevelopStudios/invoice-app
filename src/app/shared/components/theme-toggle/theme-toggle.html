@@ -1,0 +1,13 @@
+<button 
+  (click)="themeService.toggleTheme()" 
+  class="group flex items-center justify-center transition-transform duration-300 hover:scale-110 active:scale-95 outline-none"
+  aria-label="Toggle dark mode"
+>
+  @if (!themeService.darkMode()) {
+    <img src="assets/icon-moon.svg" alt="No invoices" class="w-6 h-auto" />
+  } 
+  
+  @else {
+   <img src="assets/icon-sun.svg" alt="No invoices" class="w-6 h-auto" />
+  }
+</button>

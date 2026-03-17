@@ -1,0 +1,185 @@
+<div class="fixed inset-0 z-[9999] flex md:left-0 lg:left-[103px]">
+  <div class="absolute inset-0 bg-black/50" (click)="close.emit()"></div>
+
+  <div
+    class="relative flex h-full w-full max-w-2xl flex-col bg-white dark:bg-[#141625] text-[#0C0E16] dark:text-white shadow-2xl transition-colors duration-300">
+
+    <div class="flex-1 overflow-y-auto p-8 md:p-14 custom-scrollbar">
+      <h1 class="mb-8 text-3xl font-bold">
+        @if(invoice()?.id) {
+          Edit <span class="text-[#7e88c3]">#</span>{{ invoice()?.id }}
+        } @else {
+          New Invoice
+        }
+        
+      </h1>
+
+      <form [formGroup]="invoiceForm" id="invoiceForm" (ngSubmit)="save()" class="space-y-12">
+
+        <section formGroupName="senderAddress" class="space-y-6">
+          <h3 class="font-bold text-primary">Bill From</h3>
+          <div>
+            <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Street Address</label>
+            <input formControlName="street"
+              class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-[#0C0E16] dark:text-white focus:outline-none focus:ring-1 focus:ring-primary" />
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+            <div>
+              <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">City</label>
+              <input formControlName="city"
+                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+            </div>
+            <div>
+              <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Post Code</label>
+              <input formControlName="postCode"
+                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+            </div>
+            <div class="col-span-2 md:col-span-1">
+              <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Country</label>
+              <input formControlName="country"
+                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+            </div>
+          </div>
+        </section>
+
+        <section class="space-y-6">
+          <h3 class="font-bold text-primary">Bill To</h3>
+          <div>
+            <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Client's Name</label>
+            <input formControlName="clientName"
+              class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+          </div>
+          <div>
+            <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Client's Email</label>
+            <input formControlName="clientEmail"
+              class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+          </div>
+
+          <div formGroupName="clientAddress" class="space-y-6">
+            <div>
+              <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Street Address</label>
+              <input formControlName="street"
+                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+              <div>
+                <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">City</label>
+                <input formControlName="city"
+                  class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+              </div>
+              <div>
+                <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Post Code</label>
+                <input formControlName="postCode"
+                  class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+              </div>
+              <div class="col-span-2 md:col-span-1">
+                <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Country</label>
+                <input formControlName="country"
+                  class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Invoice Date</label>
+            <input formControlName="createdAt" type="date"
+              class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 font-bold" />
+          </div>
+          <div>
+            <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Payment Terms</label>
+            <select formControlName="paymentTerms"
+              class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 font-bold appearance-none">
+              <option value="1">Net 1 Day</option>
+              <option value="7">Net 7 Days</option>
+              <option value="30">Net 30 Days</option>
+            </select>
+          </div>
+        </div>
+
+        <section formArrayName="items" class="space-y-4">
+          <h2 class="text-2xl font-bold text-[#777f98]">Item List</h2>
+
+          <div class="hidden md:grid grid-cols-12 gap-4 text-sm text-[#7e88c3] dark:text-[#DFE3FA]">
+            <div class="col-span-5">Item Name</div>
+            <div class="col-span-2 text-center">Qty.</div>
+            <div class="col-span-3">Price</div>
+            <div class="col-span-2">Total</div>
+          </div>
+
+          @for (item of items.controls; track item; let i = $index) {
+          <div [formGroupName]="i"
+            class="grid grid-cols-12 items-center gap-4 mb-12 md:mb-4 animate-in fade-in duration-300">
+
+            <div class="col-span-12 md:col-span-5">
+              <label class="md:hidden mb-2 block text-[#7e88c3]">Item Name</label>
+              <input formControlName="name"
+                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 font-bold" />
+            </div>
+
+            <div class="col-span-3 md:col-span-2">
+              <label class="md:hidden mb-2 block text-[#7e88c3]">Qty.</label>
+              <input formControlName="quantity" type="number"
+                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-center font-bold" />
+            </div>
+
+            <div class="col-span-4 md:col-span-3">
+              <label class="md:hidden mb-2 block text-[#7e88c3]">Price</label>
+              <input formControlName="price" type="number"
+                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 font-bold" />
+            </div>
+
+            <div class="col-span-3 md:col-span-1 pt-6 md:pt-0">
+              <label class="md:hidden mb-2 block text-[#7e88c3]">Total</label>
+              <div class="font-bold text-[#7E88C3] dark:text-[#DFE3FA] flex items-center h-full">
+                {{ item.get('total')?.value | number:'1.2-2' }}
+              </div>
+            </div>
+
+            <div class="col-span-2 md:col-span-1 pt-6 md:pt-0 flex justify-end">
+              <button type="button" (click)="removeItem(i)" class="group p-2 transition-transform active:scale-90"
+                aria-label="Remove item">
+                <svg width="13" height="16" xmlns="http://www.w3.org/2000/svg"
+                  class="fill-[#888EB0] group-hover:fill-status-draft transition-colors">
+                  <path
+                    d="M11.583 3.556v10.666c0 .982-.795 1.778-1.777 1.778H2.694a1.777 1.777 0 01-1.777-1.778V3.556h10.666zM8.473 0l.888.889h3.111v1.778H.028V.889h3.111L4.027 0h4.446z"
+                    fill-rule="nonzero" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          }
+
+          <button type="button" (click)="addItem()"
+            class="w-full rounded-full bg-[#F9FAFE] dark:bg-[#252945] py-4 font-bold text-[#7e88c3] transition-colors hover:bg-[#DFE3FA] dark:hover:bg-[#1e2139]">
+            + Add New Item
+          </button>
+        </section>
+      </form>
+    </div>
+
+    <div
+      class="flex justify-between items-center bg-white dark:bg-[#141625] p-8 shadow-[0_-10px_30px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.4)]">
+
+      <button type="button" (click)="close.emit()"
+        class="rounded-full bg-[#F9FAFE] dark:bg-[#252945] px-6 py-4 font-bold text-[#7E88C3] transition-colors hover:bg-[#DFE3FA] dark:hover:bg-[#1e2139]">
+        {{ invoice() ? 'Cancel' : 'Discard' }}
+      </button>
+
+      <div class="flex gap-2">
+        @if (!invoice()) {
+        <button type="button" (click)="save('draft')"
+          class="rounded-full bg-[#373B53] px-6 py-4 font-bold text-[#888EB0] dark:text-[#DFE3FA] transition-colors hover:bg-[#0C0E16]">
+          Save as Draft
+        </button>
+        }
+
+        <button type="button" (click)="save('pending')" [disabled]="isSaving"
+          class="rounded-full bg-primary px-6 py-4 font-bold text-white transition-colors hover:bg-primary-light disabled:opacity-50">
+          {{ isSaving ? 'Saving...' : (invoice() ? 'Save Changes' : 'Save & Send') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

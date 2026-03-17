@@ -1,0 +1,17 @@
+<div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-300">
+  <div class="w-full max-w-lg rounded-3xl bg-white dark:bg-dark-surface p-12 text-white shadow-2xl animate-in fade-in zoom-in duration-300">
+    <h2 class="text-2xl font-bold mb-4 text-black dark:text-white">Confirm Deletion</h2>
+    <p class="text-text-secondary mb-8">
+      Are you sure you want to delete invoice #{{ invoiceId }}? This action cannot be undone.
+    </p>
+    
+    <div class="flex justify-end gap-3">
+      <button (click)="close.emit()" class="rounded-full bg-[#252945] px-6 py-3 font-bold hover:bg-[#32385b]">
+        Cancel
+      </button>
+      <button (click)="confirm.emit()" class="rounded-full bg-[#EC5757] px-6 py-3 font-bold hover:bg-[#FF9797]">
+        Delete
+      </button>
+    </div>
+  </div>
+</div>

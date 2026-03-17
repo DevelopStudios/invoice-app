@@ -1,1 +1,24 @@
-/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+
+@theme {
+  --color-dark-surface: #1e2139;
+  --color-light-bg: #f8f8fb;
+  --color-primary: #7c5dfa;
+  --color-primary-light: #9277ff;
+  --color-dark-bg: #141625;
+  --color-status-paid: #33d69f;
+  --color-status-pending: #ff8f00;
+  --color-status-draft: #373b53;
+  --color-text-primary: #0c0e16;
+  --color-text-secondary: #888eb0;
+}
+@variant dark (&:where(.dark, .dark *));
+@layer base {
+  body {
+    @apply bg-light-bg text-text-primary transition-colors duration-300;
+  }
+  
+  .dark body {
+    @apply bg-dark-bg text-white;
+  }
+}
