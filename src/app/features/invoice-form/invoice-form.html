@@ -159,27 +159,33 @@
       </form>
     </div>
 
-    <div
-      class="flex justify-between items-center bg-white dark:bg-[#141625] p-8 shadow-[0_-10px_30px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.4)]">
+<div class="flex justify-between items-center bg-white dark:bg-[#141625] p-4 md:p-8 shadow-[0_-10px_30px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.4)]">
 
-      <button type="button" (click)="close.emit()"
-        class="rounded-full bg-[#F9FAFE] dark:bg-[#252945] px-6 py-4 font-bold text-[#7E88C3] transition-colors hover:bg-[#DFE3FA] dark:hover:bg-[#1e2139]">
-        {{ invoice() ? 'Cancel' : 'Discard' }}
+  <button type="button" (click)="close.emit()"
+    class="rounded-full bg-[#F9FAFE] dark:bg-[#252945] px-4 md:px-6 py-4 text-sm md:text-base font-bold text-[#7E88C3] transition-colors hover:bg-[#DFE3FA] dark:hover:bg-[#1e2139]">
+    {{ invoice() ? 'Cancel' : 'Discard' }}
+  </button>
+
+  <div class="flex gap-2">
+    @if (!invoice()) {
+      <button type="button" (click)="save('draft')"
+        class="shrink-0 whitespace-nowrap rounded-full bg-[#373B53] px-3 md:px-6 py-4 text-sm md:text-base font-bold text-[#888EB0] dark:text-[#DFE3FA] transition-colors hover:bg-[#0C0E16]">
+        Save as Draft
       </button>
+    }
 
-      <div class="flex gap-2">
-        @if (!invoice()) {
-        <button type="button" (click)="save('draft')"
-          class="rounded-full bg-[#373B53] px-6 py-4 font-bold text-[#888EB0] dark:text-[#DFE3FA] transition-colors hover:bg-[#0C0E16]">
-          Save as Draft
-        </button>
+    <button type="button" (click)="save('pending')" [disabled]="isSaving"
+      class="shrink-0 whitespace-nowrap rounded-full bg-primary px-3 md:px-6 py-4 text-sm md:text-base font-bold text-white transition-colors hover:bg-primary-light disabled:opacity-50">
+      @if (isSaving) {
+        Saving...
+      } @else {
+        @if (invoice()) {
+          Save <span class="hidden xs:inline">Changes</span>
+        } @else {
+          Save <span class="hidden xs:inline">& Send</span>
         }
-
-        <button type="button" (click)="save('pending')" [disabled]="isSaving"
-          class="rounded-full bg-primary px-6 py-4 font-bold text-white transition-colors hover:bg-primary-light disabled:opacity-50">
-          {{ isSaving ? 'Saving...' : (invoice() ? 'Save Changes' : 'Save & Send') }}
-        </button>
-      </div>
-    </div>
+      }
+    </button>
   </div>
+</div>
 </div>
