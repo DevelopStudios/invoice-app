@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { InvoiceService } from '../../core/services/invoice/invoice.service';
 import { Invoice } from '../../core/models/invoice.model';
@@ -24,7 +24,11 @@ export class InvoiceDetail implements OnInit {
   isLoading = signal(true);
 
   ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('id');
+    this.getInvoiceById();
+  }
+
+  getInvoiceById() {
+  const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isLoading.set(false);
       this.service.getInvoiceById(id).pipe(
@@ -32,7 +36,6 @@ export class InvoiceDetail implements OnInit {
       ).subscribe((found:any) => this.invoice.set(found));
     }
   }
-
   getStatusColor(status: string | undefined) {
     switch (status) {
       case 'paid': return '#33d69f';
@@ -43,17 +46,23 @@ export class InvoiceDetail implements OnInit {
   }
 
   markAsPaid() {
-    this.isLoading.set(true)
-    const currentInvoice = this.invoice();
+    this.isLoading.set(true);
+    const currentInvoice = this.invoice(); 
     if (currentInvoice) {
       const updatedInvoice:Invoice = {
         ...currentInvoice,
         status: 'paid'
       };
-      this.service.updateInvoice(updatedInvoice).subscribe(value => 
-      this.isLoading.set(false)
-      );
+      this.service.updateInvoice(updatedInvoice).subscribe(value =>{
+        this.invoice.set(value);
+        this.isLoading.set(false);
+      });
     }
+  }
+  
+  checkClose() {
+    this.getInvoiceById();
+    this.isEditing.set(false)
   }
 
   deleteInvoice() {

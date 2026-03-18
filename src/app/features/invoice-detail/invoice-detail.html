@@ -1,8 +1,11 @@
 <div class="mx-auto max-w-4xl py-10 px-6">
-  <a routerLink="/"
-    class="flex items-center gap-4 text-sm font-bold text-[#0C0E16] dark:text-white mb-8 hover:opacity-80 transition">
-    <span class="text-primary">&larr;</span> Go back
-  </a>
+<a routerLink="/"
+  class="flex items-center gap-4 text-sm font-bold text-[#0C0E16] dark:text-white mb-8 hover:opacity-80 transition group">
+  <svg width="7" height="10" xmlns="http://www.w3.org/2000/svg" class="stroke-primary stroke-[2]">
+    <path d="M6.342.886L2.114 5.114l4.228 4.228" fill="none" fill-rule="evenodd"/>
+  </svg>
+  <span>Go back</span>
+</a>
 
 @if (isLoading()) {
     <div class="animate-pulse">
@@ -133,5 +136,5 @@
 </app-confirmation-modal>
 }
 @if (isEditing()) {
-<app-invoice-form [invoice]="invoice()" (close)="isEditing.set(false)"></app-invoice-form>
+<app-invoice-form [invoice]="invoice()" (close)="checkClose()"></app-invoice-form>
 }

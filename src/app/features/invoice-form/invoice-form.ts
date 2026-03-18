@@ -64,12 +64,11 @@ export class InvoiceForm implements OnInit {
 
   ngOnInit() {
   }
-  // Inside your InvoiceFormComponent
+
   removeItem(index: number): void {
     this.items.removeAt(index);
   }
 
-  // Helper getter to access the FormArray easily
   get items() {
     return this.invoiceForm.get('items') as FormArray;
   }
@@ -81,47 +80,57 @@ export class InvoiceForm implements OnInit {
   }
 
   save(status: 'draft' | 'pending' = 'pending') {
-    // Drafts often bypass validation, so we only check valid for 'pending'
-    if (status === 'pending' && this.invoiceForm.invalid) {
-      this.invoiceForm.markAllAsTouched();
-      return;
-    }
-
-    const formValue = this.invoiceForm.value;
-    const currentInvoice = this.invoice();
-    this.isSaving = true;
-
-    // Calculate total from items
-    const total = formValue.items.reduce((sum: number, item: any) =>
-      sum + (item.quantity * item.price), 0);
-
-    const invoiceData: Partial<Invoice> = {
-      ...formValue,
-      status: status,
-      total: total
-    };
-
-    if (currentInvoice) {
-      // Updating existing
-      this.invoiceService.updateInvoice({ ...currentInvoice, ...invoiceData } as Invoice).subscribe({
-        next: () => this.handleSuccess(),
-        error: () => this.isSaving = false
-      });
-    } else {
-      // Creating new
-      const newInvoice = {
-        id: this.generateResourceId(),
-        ...invoiceData
-      } as Invoice;
-
-      this.invoiceService.createInvoice(newInvoice).subscribe({
-        next: () => this.handleSuccess(),
-        error: () => this.isSaving = false
-      });
-    }
+  if (status === 'pending' && this.invoiceForm.invalid) {
+    this.invoiceForm.markAllAsTouched();
+    return;
   }
 
-  // Helper
+  const formValue = this.invoiceForm.getRawValue();
+  const currentInvoice = this.invoice();
+  this.isSaving = true;
+  const itemsWithTotals = formValue.items.map((item: any) => ({
+    ...item,
+    total: item.quantity * item.price
+  }));
+
+  const grandTotal = itemsWithTotals.reduce((sum: number, item: any) => sum + item.total, 0);
+
+  const dueDate = this.calculateDueDate(formValue.createdAt, formValue.paymentTerms);
+
+  const invoiceData: Invoice = {
+    ...currentInvoice, 
+    ...formValue,
+    items: itemsWithTotals,
+    total: grandTotal,
+    paymentDue: dueDate,
+    status: status
+  };
+
+  if (currentInvoice?.id) {
+    this.invoiceService.updateInvoice(invoiceData).subscribe({
+      next: () => this.handleSuccess(),
+      error: () => this.isSaving = false
+    });
+  } else {
+    const newInvoice = {
+      ...invoiceData,
+      id: this.generateResourceId(),
+    } as Invoice;
+
+    this.invoiceService.createInvoice(newInvoice).subscribe({
+      next: () => this.handleSuccess(),
+      error: () => this.isSaving = false
+    });
+  }
+}
+
+private calculateDueDate(createdAt: string, terms: number): string {
+  if (!createdAt) return '';
+  const date = new Date(createdAt);
+  date.setDate(date.getDate() + Number(terms));
+  return date.toISOString().split('T')[0];
+}
+
   private handleSuccess() {
     this.isSaving = false;
     this.close.emit();

@@ -33,6 +33,10 @@ export class InvoiceList implements OnInit {
   selectedInvoice = signal<Invoice | null>(null);
 
   ngOnInit(): void {
+    this.getInvoices();
+  }
+
+  getInvoices(){
     this.invoiceService.getInvoices().subscribe(data => {
      this.invoices.set(data);
     });
@@ -44,6 +48,7 @@ export class InvoiceList implements OnInit {
   }
 
   closeForm() {
+    this.getInvoices();
     this.isFormOpen.set(false);
   }
 
