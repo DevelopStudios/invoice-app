@@ -1,7 +1,8 @@
 <div class="flex flex-col md:flex-row min-h-screen transition-colors dark:bg-[#141625] duration-300">
   <app-sidebar></app-sidebar>
-
+  
   <main class="flex-1 md:ml-[103px] p-6 md:p-14">
     <router-outlet></router-outlet>
+    {{llm.engineStatus()}}
   </main>
 </div>
