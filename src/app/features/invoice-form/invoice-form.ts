@@ -1,8 +1,10 @@
-import { Component, inject, input, OnInit, output, effect, signal } from '@angular/core';
+import { Component, inject, input, OnInit, output, effect, signal, viewChild, ElementRef } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Invoice } from '../../core/models/invoice.model';
 import { DecimalPipe } from '@angular/common';
 import { InvoiceService } from '../../core/services/invoice/invoice.service';
+import { LlmInferenceService, ParsedInvoice } from '../../shared/services/llm-inference';
+
 
 @Component({
   selector: 'app-invoice-form',
@@ -14,11 +16,19 @@ import { InvoiceService } from '../../core/services/invoice/invoice.service';
 export class InvoiceForm implements OnInit {
   private fb = inject(FormBuilder);
   public invoiceService = inject(InvoiceService);
+  public llmsService = inject(LlmInferenceService);
   invoiceForm!: FormGroup;
   invoice = input<Invoice | null>(null);
   close = output<void>();
   isSaving: boolean = false;
+  isGenerating = signal(false);
+  aiTextarea = viewChild<ElementRef<HTMLTextAreaElement>>('aiInput');
+  
   constructor() {
+    // Effect to handle the initial height calculation for the AI textarea
+    effect(() => {
+      this.adjustAiTextareaHeight();
+    });
 
     this.invoiceForm = this.fb.group({
       senderAddress: this.fb.group({
@@ -30,6 +40,7 @@ export class InvoiceForm implements OnInit {
         street: [''], city: [''], postCode: [''], country: ['']
       }),
       createdAt: [''],
+      paymentDue: [''],
       paymentTerms: [30],
       items: this.fb.array([])
     });
@@ -43,6 +54,7 @@ export class InvoiceForm implements OnInit {
           clientName: data.clientName,
           clientEmail: data.clientEmail,
           createdAt: data.createdAt,
+          paymentDue: data.paymentDue,
           paymentTerms: data.paymentTerms,
           senderAddress: data.senderAddress,
           clientAddress: data.clientAddress
@@ -63,6 +75,45 @@ export class InvoiceForm implements OnInit {
   }
 
   ngOnInit() {
+  }
+
+  adjustAiTextareaHeight() {
+    const el = this.aiTextarea()?.nativeElement;
+    if (el) {
+      requestAnimationFrame(() => {
+        el.style.height = 'auto'; 
+        // Ensure we don't shrink smaller than the responsive min-height defined in CSS
+        el.style.height = (el.scrollHeight) + 'px';
+      });
+    }
+  }
+
+  async onAiGenerate(prompt: string) {
+    if (!prompt || this.isGenerating()) return;
+
+    this.isGenerating.set(true);
+    try {
+      const result = await this.llmsService.parseInvoicePrompt(prompt);
+      if (result) {
+        this.invoiceForm.patchValue(result);
+        
+        if (result.items) {
+          this.items.clear();
+          result.items.forEach(item => {
+            this.items.push(this.fb.group({
+              name: [item.name],
+              quantity: [item.quantity],
+              price: [item.price],
+              total: [item.total]
+            }));
+          });
+        }
+      }
+    } catch (error) {
+      console.error('AI Generation failed', error);
+    } finally {
+      this.isGenerating.set(false);
+    }
   }
 
   removeItem(index: number): void {

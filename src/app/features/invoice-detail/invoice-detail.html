@@ -110,19 +110,18 @@
       @for (item of invoice()?.items; track item.name) {
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-bold mb-6 items-center last:mb-0">
         <span class="col-span-2 md:col-span-1">{{ item.name }}</span>
-        <span class="md:text-center text-[#7E88C3] dark:text-text-secondary">{{ item.quantity }} x £{{ item.price |
-          number:'1.2-2' }}</span>
-        <span class="text-right md:hidden">£{{ item.total | number:'1.2-2' }}</span>
-        <span class="hidden md:block text-right text-[#7E88C3] dark:text-text-secondary">£{{ item.price | number:'1.2-2'
+        <span class="md:text-center text-[#7E88C3] dark:text-text-secondary">{{ item.quantity }} x £{{ item.price | number:'1.0-0' }}</span>
+        <span class="text-right md:hidden">£{{ item.total | number:'1.0-0' }}</span>
+        <span class="hidden md:block text-right text-[#7E88C3] dark:text-text-secondary">£{{ item.price | number:'1.0-0'
           }}</span>
-        <span class="hidden md:block text-right">£{{ item.total | number:'1.2-2' }}</span>
+        <span class="hidden md:block text-right">£{{ item.total | number:'1.0-0' }}</span>
       </div>
       }
     </div>
 
     <div class="flex justify-between items-center bg-[#373B53] dark:bg-[#0C0E16] p-8 rounded-b-lg text-white">
       <span class="text-sm font-medium">Amount Due</span>
-      <span class="text-2xl md:text-3xl font-bold">£{{ invoice()?.total | number:'1.2-2' }}</span>
+      <span class="text-2xl md:text-3xl font-bold">£{{ invoice()?.total | number:'1.0-0' }}</span>
     </div>
   </div>
   }

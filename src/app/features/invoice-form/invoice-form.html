@@ -1,11 +1,11 @@
-<div class="fixed inset-0 z-[9999] flex md:left-0 lg:left-[103px]">
+<div class="fixed inset-0 z-[9999] flex md:left-[103px]">
   <div class="absolute inset-0 bg-black/50" (click)="close.emit()"></div>
 
   <div
     class="relative flex h-full w-full max-w-2xl flex-col bg-white dark:bg-[#141625] text-[#0C0E16] dark:text-white shadow-2xl transition-colors duration-300">
 
-    <div class="flex-1 overflow-y-auto p-8 md:p-14 custom-scrollbar">
-      <h1 class="mb-8 text-3xl font-bold">
+    <div class="flex-1 overflow-y-auto px-6 py-8 md:p-14 custom-scrollbar">
+      <h1 class="mb-8 text-2xl md:text-3xl font-bold">
         @if(invoice()?.id) {
           Edit <span class="text-[#7e88c3]">#</span>{{ invoice()?.id }}
         } @else {
@@ -14,30 +14,73 @@
         
       </h1>
 
-      <form [formGroup]="invoiceForm" id="invoiceForm" (ngSubmit)="save()" class="space-y-12">
+      <!-- AI Generator Section -->
+      @if(!invoice()?.id) {
+        <div class="mb-10 md:mb-12 p-4 md:p-6 rounded-xl bg-primary/5 border-2 border-dashed border-primary/20">
+          <label class="mb-2 block text-sm font-bold text-primary uppercase tracking-widest">
+            Generate with AI Assistant
+          </label>
+          @if (isGenerating()) {
+            <div class="flex items-center justify-between gap-4 p-4 rounded-md bg-white dark:bg-[#1e2139] border border-primary/30 shadow-[0_0_20px_rgba(124,93,250,0.15)] overflow-hidden relative text-sm">
+              <div class="flex items-center gap-4 relative z-10">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary animate-spin-slow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-primary animate-pulse">Assistant is thinking...</p>
+                </div>
+              </div>
+              <!-- Subtle background scanning effect -->
+              <div class="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite]"></div>
+            </div>
+          } @else {
+            <div class="flex flex-col md:flex-row gap-4 items-start w-full">
+              <textarea 
+                #aiInput
+                rows="1"
+                placeholder="e.g. 5 hours of design at $50/hr for Acme Corp, due in 7 days"
+                class="w-full flex-1 rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-sm font-bold text-[#0C0E16] dark:text-white focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-[#7e88c3]/50 resize-none overflow-hidden leading-relaxed min-h-[80px] md:min-h-[56px]"
+                (input)="adjustAiTextareaHeight()"
+                (keydown.enter)="$event.preventDefault(); onAiGenerate(aiInput.value)"
+              ></textarea>
+              <button 
+                type="button"
+                (click)="onAiGenerate(aiInput.value)"
+                [disabled]="!llmsService.isReady()"
+                class="w-full md:w-auto rounded-md bg-primary px-8 py-4 font-bold text-white hover:bg-primary-light transition-all disabled:opacity-50 min-w-[120px]">
+                Generate
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <form [formGroup]="invoiceForm" id="invoiceForm" (ngSubmit)="save()" class="space-y-10 md:space-y-12">
 
         <section formGroupName="senderAddress" class="space-y-6">
           <h3 class="font-bold text-primary">Bill From</h3>
           <div>
-            <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Street Address</label>
+            <label class="mb-2 block text-sm text-[#7e88c3] dark:text-[#DFE3FA]">Street Address</label>
             <input formControlName="street"
-              class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-[#0C0E16] dark:text-white focus:outline-none focus:ring-1 focus:ring-primary" />
+              class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-sm font-bold text-[#0C0E16] dark:text-white focus:outline-none focus:ring-1 focus:ring-primary" />
           </div>
           <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
             <div>
-              <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">City</label>
+              <label class="mb-2 block text-sm text-[#7e88c3] dark:text-[#DFE3FA]">City</label>
               <input formControlName="city"
-                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-sm font-bold" />
             </div>
             <div>
-              <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Post Code</label>
+              <label class="mb-2 block text-sm text-[#7e88c3] dark:text-[#DFE3FA]">Post Code</label>
               <input formControlName="postCode"
-                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-sm font-bold" />
             </div>
             <div class="col-span-2 md:col-span-1">
-              <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Country</label>
+              <label class="mb-2 block text-sm text-[#7e88c3] dark:text-[#DFE3FA]">Country</label>
               <input formControlName="country"
-                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-sm font-bold" />
             </div>
           </div>
         </section>
@@ -45,37 +88,37 @@
         <section class="space-y-6">
           <h3 class="font-bold text-primary">Bill To</h3>
           <div>
-            <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Client's Name</label>
+            <label class="mb-2 block text-sm text-[#7e88c3] dark:text-[#DFE3FA]">Client's Name</label>
             <input formControlName="clientName"
-              class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+              class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-sm font-bold" />
           </div>
           <div>
-            <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Client's Email</label>
+            <label class="mb-2 block text-sm text-[#7e88c3] dark:text-[#DFE3FA]">Client's Email</label>
             <input formControlName="clientEmail"
-              class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+              class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-sm font-bold" />
           </div>
 
           <div formGroupName="clientAddress" class="space-y-6">
-            <div>
+            <div class="text-sm">
               <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Street Address</label>
               <input formControlName="street"
-                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 font-bold" />
             </div>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
               <div>
-                <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">City</label>
+                <label class="mb-2 block text-sm text-[#7e88c3] dark:text-[#DFE3FA]">City</label>
                 <input formControlName="city"
-                  class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+                  class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-sm font-bold" />
               </div>
               <div>
-                <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Post Code</label>
+                <label class="mb-2 block text-sm text-[#7e88c3] dark:text-[#DFE3FA]">Post Code</label>
                 <input formControlName="postCode"
-                  class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+                  class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-sm font-bold" />
               </div>
               <div class="col-span-2 md:col-span-1">
-                <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Country</label>
+                <label class="mb-2 block text-sm text-[#7e88c3] dark:text-[#DFE3FA]">Country</label>
                 <input formControlName="country"
-                  class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4" />
+                  class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-sm font-bold" />
               </div>
             </div>
           </div>
@@ -83,14 +126,14 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Invoice Date</label>
+            <label class="mb-2 block text-sm text-[#7e88c3] dark:text-[#DFE3FA]">Invoice Date</label>
             <input formControlName="createdAt" type="date"
-              class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 font-bold" />
+              class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-sm font-bold" />
           </div>
           <div>
-            <label class="mb-2 block text-[#7e88c3] dark:text-[#DFE3FA]">Payment Terms</label>
+            <label class="mb-2 block text-sm text-[#7e88c3] dark:text-[#DFE3FA]">Payment Terms</label>
             <select formControlName="paymentTerms"
-              class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 font-bold appearance-none">
+              class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-sm font-bold appearance-none">
               <option value="1">Net 1 Day</option>
               <option value="7">Net 7 Days</option>
               <option value="30">Net 30 Days</option>
@@ -110,30 +153,30 @@
 
           @for (item of items.controls; track item; let i = $index) {
           <div [formGroupName]="i"
-            class="grid grid-cols-12 items-center gap-4 mb-12 md:mb-4 animate-in fade-in duration-300">
+            class="grid grid-cols-12 items-center gap-x-4 gap-y-2 mb-10 md:mb-4 animate-in fade-in duration-300">
 
             <div class="col-span-12 md:col-span-5">
-              <label class="md:hidden mb-2 block text-[#7e88c3]">Item Name</label>
+              <label class="md:hidden mb-2 block text-sm text-[#7e88c3]">Item Name</label>
               <input formControlName="name"
-                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 font-bold" />
+                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-sm font-bold" />
             </div>
 
-            <div class="col-span-3 md:col-span-2">
-              <label class="md:hidden mb-2 block text-[#7e88c3]">Qty.</label>
-              <input formControlName="quantity" type="number"
-                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-center font-bold" />
+            <div class="col-span-2 md:col-span-2">
+              <label class="md:hidden mb-2 block text-sm text-[#7e88c3]">Qty.</label>
+              <input formControlName="quantity" type="number" step="1"
+                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] py-4 px-2 text-center text-sm font-bold" />
             </div>
 
             <div class="col-span-4 md:col-span-3">
-              <label class="md:hidden mb-2 block text-[#7e88c3]">Price</label>
-              <input formControlName="price" type="number"
-                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 font-bold" />
+              <label class="md:hidden mb-2 block text-sm text-[#7e88c3]">Price</label>
+              <input formControlName="price" type="number" step="1"
+                class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] py-4 px-2 text-sm font-bold" />
             </div>
 
-            <div class="col-span-3 md:col-span-1 pt-6 md:pt-0">
-              <label class="md:hidden mb-2 block text-[#7e88c3]">Total</label>
-              <div class="font-bold text-[#7E88C3] dark:text-[#DFE3FA] flex items-center h-full">
-                {{ item.get('total')?.value | number:'1.2-2' }}
+            <div class="col-span-4 md:col-span-1 pt-6 md:pt-0">
+              <label class="md:hidden mb-2 block text-sm text-[#7e88c3]">Total</label>
+              <div class="text-sm font-bold text-[#7E88C3] dark:text-[#DFE3FA] flex items-center h-full">
+                {{ item.get('total')?.value | number:'1.0-0' }}
               </div>
             </div>
 
@@ -152,7 +195,7 @@
           }
 
           <button type="button" (click)="addItem()"
-            class="w-full rounded-full bg-[#F9FAFE] dark:bg-[#252945] py-4 font-bold text-[#7e88c3] transition-colors hover:bg-[#DFE3FA] dark:hover:bg-[#1e2139]">
+            class="w-full rounded-full bg-[#F9FAFE] dark:bg-[#252945] py-4 text-sm font-bold text-[#7e88c3] transition-colors hover:bg-[#DFE3FA] dark:hover:bg-[#1e2139]">
             + Add New Item
           </button>
         </section>

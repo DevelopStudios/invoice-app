@@ -1,8 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Sidebar } from "./shared/components/sidebar/sidebar";
 import { ThemeToggle } from './shared/components/theme-toggle/theme-toggle';
 import { LlmInferenceService } from './shared/services/llm-inference';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-root',
@@ -13,7 +14,8 @@ import { LlmInferenceService } from './shared/services/llm-inference';
 export class App {
   public llm = inject(LlmInferenceService);
   constructor(){
-    this.llm.initialize();
+     this.llm.initialize();
   }
+  
   protected readonly title = signal('invoice-app');
 }
