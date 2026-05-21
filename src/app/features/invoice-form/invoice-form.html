@@ -88,14 +88,32 @@
         <section class="space-y-6">
           <h3 class="font-bold text-primary">Bill To</h3>
           <div>
-            <label class="mb-2 block text-sm text-[#7e88c3] dark:text-[#DFE3FA]">Client's Name</label>
+            <div class="mb-2 flex items-center justify-between">
+              <label class="text-sm text-[#7e88c3] dark:text-[#DFE3FA]">Client's Name</label>
+              @if (invoiceForm.get('clientName')?.invalid && invoiceForm.get('clientName')?.touched) {
+                <span class="text-xs font-semibold text-[#EC5757]">can't be empty</span>
+              }
+            </div>
             <input formControlName="clientName"
-              class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-sm font-bold" />
+              class="w-full rounded-md border bg-white dark:bg-[#1e2139] p-4 text-sm font-bold dark:border-none"
+              [class.border-[#EC5757]]="invoiceForm.get('clientName')?.invalid && invoiceForm.get('clientName')?.touched"
+              [class.border-[#DFE3FA]]="!(invoiceForm.get('clientName')?.invalid && invoiceForm.get('clientName')?.touched)" />
           </div>
           <div>
-            <label class="mb-2 block text-sm text-[#7e88c3] dark:text-[#DFE3FA]">Client's Email</label>
+            <div class="mb-2 flex items-center justify-between">
+              <label class="text-sm text-[#7e88c3] dark:text-[#DFE3FA]">Client's Email</label>
+              @if (invoiceForm.get('clientEmail')?.touched) {
+                @if (invoiceForm.get('clientEmail')?.hasError('required')) {
+                  <span class="text-xs font-semibold text-[#EC5757]">can't be empty</span>
+                } @else if (invoiceForm.get('clientEmail')?.hasError('email')) {
+                  <span class="text-xs font-semibold text-[#EC5757]">invalid email format</span>
+                }
+              }
+            </div>
             <input formControlName="clientEmail"
-              class="w-full rounded-md border border-[#DFE3FA] dark:border-none bg-white dark:bg-[#1e2139] p-4 text-sm font-bold" />
+              class="w-full rounded-md border bg-white dark:bg-[#1e2139] p-4 text-sm font-bold dark:border-none"
+              [class.border-[#EC5757]]="invoiceForm.get('clientEmail')?.invalid && invoiceForm.get('clientEmail')?.touched"
+              [class.border-[#DFE3FA]]="!(invoiceForm.get('clientEmail')?.invalid && invoiceForm.get('clientEmail')?.touched)" />
           </div>
 
           <div formGroupName="clientAddress" class="space-y-6">
