@@ -1,4 +1,4 @@
-import { Component, inject, input, OnInit, output, effect, signal, viewChild, ElementRef } from '@angular/core';
+import { Component, inject, input, OnInit, output, effect, signal, viewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Invoice } from '../../core/models/invoice.model';
 import { DecimalPipe } from '@angular/common';
@@ -17,6 +17,7 @@ export class InvoiceForm implements OnInit {
   private fb = inject(FormBuilder);
   public invoiceService = inject(InvoiceService);
   public llmsService = inject(LlmInferenceService);
+  private cdr = inject(ChangeDetectorRef);
   invoiceForm!: FormGroup;
   invoice = input<Invoice | null>(null);
   close = output<void>();
@@ -75,6 +76,12 @@ export class InvoiceForm implements OnInit {
   }
 
   ngOnInit() {
+    if (!this.invoice()) {
+      const senderAddress = this.invoiceService.getLastSenderAddress();
+      if (senderAddress) {
+        this.invoiceForm.patchValue({ senderAddress });
+      }
+    }
   }
 
   adjustAiTextareaHeight() {
@@ -95,8 +102,12 @@ export class InvoiceForm implements OnInit {
     try {
       const result = await this.llmsService.parseInvoicePrompt(prompt);
       if (result) {
-        this.invoiceForm.patchValue(result);
-        
+        const today = new Date().toISOString().split('T')[0];
+        this.invoiceForm.patchValue({
+          ...result,
+          createdAt: result.createdAt || today,
+          ...(result.clientAddress && { clientAddress: result.clientAddress }),
+        });
         if (result.items) {
           this.items.clear();
           result.items.forEach(item => {
@@ -133,6 +144,7 @@ export class InvoiceForm implements OnInit {
   save(status: 'draft' | 'pending' = 'pending') {
   if (status === 'pending' && this.invoiceForm.invalid) {
     this.invoiceForm.markAllAsTouched();
+    this.cdr.markForCheck();
     return;
   }
 

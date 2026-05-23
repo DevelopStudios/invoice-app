@@ -52,6 +52,12 @@ export class InvoiceService {
     );
   }
 
+  getLastSenderAddress(): Invoice['senderAddress'] | null {
+    const invoices = this.getRawData();
+    const last = [...invoices].reverse().find(i => i.senderAddress?.street);
+    return last?.senderAddress ?? null;
+  }
+
   private getRawData(): Invoice[] {
     return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
   }
