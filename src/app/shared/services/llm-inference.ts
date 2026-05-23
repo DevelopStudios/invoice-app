@@ -71,52 +71,26 @@ export class LlmInferenceService {
   async parseInvoicePrompt(userInput: string): Promise<Partial<ParsedInvoice>> {
     if (!this.isReady()) throw new Error('LLM not ready');
     const currentDate = new Date().toISOString().split('T')[0];
-    const systemPrompt = `You are a professional invoice parser. 
-      Output ONLY valid, raw JSON. No markdown. No explanations.
-      Do NOT include arithmetic expressions like (5 * 120); calculate the final numbers yourself. 
-      All numerical values (quantity, price, total) MUST be integers.
-      Current Date is ${currentDate}. Use this to resolve relative dates like "today" or "next week".
-      Strict JSON format with double-quoted keys:
-      {
-        "id": "AA1449",
-        "createdAt": "2021-10-7",
-        "paymentDue": "2021-10-14",
-        "paymentTerms": 7,
-        "clientName": "Mellisa Clarke",
-        "clientEmail": "mellisa.clarke@example.com",
-        "status": "paid",
-        "senderAddress": {
-            "street": "19 Union Terraceasdasd",
-            "city": "London",
-            "postCode": "E1 3EZ",
-            "country": "United Kingdom"
-        },
-        "clientAddress": {
-            "street": "46 Abbey Row",
-            "city": "Cambridge",
-            "postCode": "CB5 6EG",
-            "country": "United Kingdom"
-        },
-        "items": [
-            {
-                "name": "New Logo",
-                "quantity": 1,
-                "price": 1532,
-                "total": 1532
-            },
-            {
-                "name": "Brand Guidelines",
-                "quantity": 1,
-                "price": 2500,
-                "total": 2500
-            }
-        ],
-        "total": 4032
-      }
-      
-      Note: payments terms can only be either 1,7 or 30.
-      
-      `;
+    const systemPrompt = `You extract invoice data from a user message.
+
+  Rules:
+  - Use ONLY values the user explicitly mentioned. Never invent values.
+  - If a field is not mentioned, use "" for strings, 0 for numbers.
+  - Calculate item total yourself: quantity × price.
+  - paymentTerms must be 1, 7, or 30 only. Pick the closest one mentioned, default 30.
+  - Output ONLY raw JSON. No markdown, no explanation.
+
+  Example:
+  User: "3 hours of consulting at $80/hr for Jane (jane@example.com), due in 7 days"
+  Output:
+  {
+    "clientName": "Jane",
+    "clientEmail": "jane@example.com",
+    "paymentTerms": 7,
+    "items": [
+      { "name": "Consulting", "quantity": 3, "price": 80, "total": 240 }
+    ]
+  }`;
 
     try {
       const messages = [
@@ -133,14 +107,14 @@ export class LlmInferenceService {
         messages, temperature: 0.0,
       });
       const rawContent = reply.choices[0].message.content;
-      return this.cleanAndParseJson(rawContent);
+      return this.cleanAndParseJson(rawContent,userInput);
     } catch (error) {
       console.error('LLM Error', error);
       return {};
     }
   }
   
-  private cleanAndParseJson(text: string): Partial<ParsedInvoice> {
+  private cleanAndParseJson(text: string, userInput: string): Partial<ParsedInvoice> {
     try {
       // Remove markdown code blocks and whitespace
       let jsonString = text.replace(/```json|```/g, '').trim();
@@ -151,14 +125,35 @@ export class LlmInferenceService {
         return isNaN(result) ? match : result.toString();
       });
 
+      let parsed: Partial<ParsedInvoice>;
       try {
-        return JSON.parse(jsonString);
+        parsed = JSON.parse(jsonString);
       } catch (initialError) {
         jsonString = jsonString
           .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
           .replace(/,\s*([}\]])/g, '$1');
-        return JSON.parse(jsonString);
+        parsed = JSON.parse(jsonString);
       }
+
+      // Normalise dates to yyyy-MM-dd (model sometimes outputs 2021-1-3)
+      const padDate = (d: string) =>
+        d.replace(/^(\d{4})-(\d{1,2})-(\d{1,2})$/, (_, y, m, day) =>
+          `${y}-${m.padStart(2, '0')}-${day.padStart(2, '0')}`
+        );
+      if (parsed.createdAt) parsed.createdAt = padDate(parsed.createdAt);
+      if (parsed.paymentDue) parsed.paymentDue = padDate(parsed.paymentDue);
+
+      if (parsed.items && parsed.items.length > 0) {
+        const userNumbers = [...userInput.matchAll(/\d+(\.\d+)?/g)].map(m => parseFloat(m[0]));
+        const allItemsGroundedInPrompt = parsed.items.every((item: any) =>
+          userNumbers.some(n => n === item.price || n === item.quantity || n === item.total)
+        );
+        if (!allItemsGroundedInPrompt) {
+          parsed.items = [];
+        }
+      }
+
+      return parsed;
     } catch (e) {
       console.error("JSON Parse Error:", e);
       return {};
