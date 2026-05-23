@@ -16,16 +16,16 @@ Most invoice demos are just forms. InvoiceFlow adds a browser-native AI layer th
 
 Type a plain-English description in the AI field and hit **Generate**:
 
-> "Invoice for Alex Chen at alex@example.com — 3 days of consulting at $800/day and 2 logo revisions at $400 each. Net 30 from today."
+> "3 hours of UI design at $75/hr for Sarah Johnson (sarah@acmecorp.com), due in 7 days"
 
-The model outputs structured JSON, which is parsed and patched directly into the reactive form — including line items, totals, payment terms, and due date.
+The model outputs structured JSON, which is parsed and patched directly into the reactive form — including line items, totals, payment terms, and due date. A hallucination guard discards any items whose prices or quantities don't appear in the original prompt.
 
 **How it works under the hood:**
 
 1. `LlmInferenceService` spawns a dedicated Web Worker on first use
 2. The worker loads `Qwen2.5-0.5B-Instruct-q4f16_1-MLC` via WebLLM (cached in IndexedDB after first download, ~300MB)
 3. A structured system prompt enforces raw JSON output with strict field types
-4. `cleanAndParseJson()` handles arithmetic expressions and malformed JSON that small models occasionally produce
+4. `cleanAndParseJson()` handles arithmetic expressions, un-padded dates, malformed JSON, and hallucinated line items
 5. The result is patched into the Angular Reactive Form via `patchValue()` + `FormArray` rebuild
 
 Loading progress is exposed as Signals (`engineProgress`, `engineStatus`, `isReady`) so the UI reacts without subscriptions.
@@ -55,6 +55,7 @@ Loading progress is exposed as Signals (`engineProgress`, `engineStatus`, `isRea
 - **Line items** — dynamic FormArray with auto-calculated item totals and grand total
 - **Due date calculation** — computed from creation date + payment terms (Net 1 / 7 / 30)
 - **Local persistence** — survives page refresh; no backend required
+- **Dark mode** — system-preference aware, togglable manually
 
 ---
 
@@ -68,7 +69,53 @@ Loading progress is exposed as Signals (`engineProgress`, `engineStatus`, `isRea
 | Styling | Tailwind CSS 4.2 + SCSS |
 | Reactivity | Angular Signals + RxJS 7.8 |
 | Language | TypeScript 5.8 |
-| Runtime | Zone.js 0.15 |
+| Unit tests | Karma 6 + Jasmine 5 |
+| E2E tests | Playwright |
+
+---
+
+## Testing
+
+### Unit tests (Karma + Jasmine)
+
+```bash
+ng test
+```
+
+Runs in watch mode by default. For a single CI run: `ng test --watch=false`.
+
+**What's covered:**
+- `LlmInferenceService` — JSON parsing, arithmetic evaluation, date normalisation, hallucination guard
+- `InvoiceService` — localStorage CRUD, HTTP seeding, sender address lookup
+- `InvoiceForm` — validation feedback, AI generate does not overwrite sender address, date fallback
+- `InvoiceList` — singular/plural invoice count grammar
+- `InvoiceDetail` — $ currency prefix, two decimal places on amounts
+
+### E2E tests (Playwright)
+
+```bash
+# First time only — install browser
+npx playwright install chromium
+
+# In one terminal: start the dev server
+ng serve
+
+# In another terminal: run all e2e specs
+npx playwright test
+
+# Interactive UI mode
+npx playwright test --ui
+```
+
+**What's covered:**
+- Invoice list loads with $ amounts and correct count grammar
+- Filter by status shows only matching invoices
+- New invoice form blocks invalid saves and shows validation errors
+- Creating an invoice adds it to the list
+- Detail page shows $ amounts with two decimal places and non-wrapping dates
+- Editing an invoice reflects changes on the detail page
+- Delete confirmation modal names the invoice; confirming removes it from the list
+- Mark as Paid updates the status badge and disables the button
 
 ---
 
