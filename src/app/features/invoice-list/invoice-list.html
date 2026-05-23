@@ -4,7 +4,7 @@
       <div>
         <h1 class="text-3xl md:text-4xl font-bold text-black dark:text-white">Invoices</h1>
         <p class="text-[#888eb0] text-sm md:text-base">
-          {{ invoiceCount() > 0 ? 'There are ' + invoiceCount() + ' total invoices' : 'No invoices' }}
+          {{ invoiceCount() === 1 ? 'There is 1 invoice': invoiceCount() > 1? 'There are ' + invoiceCount() + ' total invoices': 'No invoices' }}
         </p>
       </div>
 
@@ -59,7 +59,7 @@
     <span class="text-right text-[#888eb0] dark:text-white md:text-left">{{ invoice.clientName }}</span>
     <span class="text-[#888eb0] dark:text-[#DFE3FA]">Due {{ invoice.paymentDue }}</span>
 
-    <span class="text-xl font-bold text-black dark:text-white text-right md:text-left">£{{ invoice.total.toFixed(2)
+    <span class="text-xl font-bold text-black dark:text-white text-right md:text-left">${{ invoice.total.toFixed(2)
       }}</span>
 
     <div class="col-span-2 md:col-span-1 flex justify-end lg:justify-between items-center gap-4">
