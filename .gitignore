@@ -45,3 +45,12 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# AI tools
+.claude/
+.cursor/
+.windsurf/
+.copilot/
+*.cursorrules
+.aider*
+.continue/
