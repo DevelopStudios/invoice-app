@@ -54,3 +54,7 @@ Thumbs.db
 *.cursorrules
 .aider*
 .continue/
+.playwright-mcp/
+
+# Local-only dirs
+/docs
